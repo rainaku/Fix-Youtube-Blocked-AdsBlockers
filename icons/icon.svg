@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Background -->
+  <rect x="8" y="8" width="100" height="100" rx="16" fill="#FF0000"/>
+  
+  <!-- Play triangle -->
+  <polygon points="45,35 45,85 85,60" fill="#FFFFFF"/>
+  
+  <!-- Green checkmark circle -->
+  <circle cx="100" cy="100" r="28" fill="#FFFFFF"/>
+  <circle cx="100" cy="100" r="24" fill="#4CAF50"/>
+  
+  <!-- Checkmark -->
+  <polyline points="88,100 96,108 112,92" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
