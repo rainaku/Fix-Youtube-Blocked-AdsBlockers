@@ -134,3 +134,72 @@ Page loads fresh → Video plays ✓
 ## License
 
 MIT License - Free to use and modify
+
+---
+
+## Changelog
+
+### v1.0.2 (2026-01-19) - Major Bug Fixes
+
+#### 🐛 Bug Fixes
+
+**1. Fix video không load khi click từ trang chủ/kênh YouTube**
+- **Vấn đề**: Click video từ trang chủ (`youtube.com`) hoặc trang kênh (`youtube.com/@channel`) bị chặn, video không phát được
+- **Nguyên nhân**: Content script đang intercept click events và chặn YouTube SPA navigation
+- **Giải pháp**: Loại bỏ click interceptor, thay bằng auto-reload khi navigate đến video mới
+
+**2. Fix lỗi loop reload vô hạn khi vào trang kênh**
+- **Vấn đề**: Khi vào trang kênh, trang liên tục reload không dừng
+- **Nguyên nhân**: SPA navigation handler gọi `window.location.reload()` mỗi khi URL thay đổi
+- **Giải pháp**: Thay đổi logic chỉ reload khi navigate đến video mới, không reload khi navigate trong kênh
+
+**3. Fix "Không xem được nội dung này" error**
+- **Vấn đề**: Video hiển thị lỗi "Không xem được nội dung này. Vui lòng thử lại sau."
+- **Nguyên nhân**: 
+  - XHR interceptor trong `inject.js` block YouTube API requests
+  - `rules.json` block quá nhiều endpoints quan trọng
+  - `background.js` dùng deprecated webRequest API (MV3 không hỗ trợ)
+- **Giải pháp**: 
+  - Loại bỏ XHR/fetch interception
+  - Đơn giản hóa blocking rules chỉ block ads domains
+  - Remove deprecated webRequest code
+
+#### 🔧 Technical Changes
+
+| File | Changes |
+|------|---------|
+| `content.js` | Thay click interceptor bằng MutationObserver để detect URL changes và auto-reload |
+| `inject.js` | Loại bỏ XHR/fetch interception, chỉ giữ performance CSS và Storage Access bypass |
+| `background.js` | Remove deprecated webRequest blocking (MV3 dùng declarativeNetRequest) |
+| `rules.json` | Đơn giản hóa, chỉ block ads domains (doubleclick, googleads, etc.) |
+| `manifest.json` | Loại bỏ declarativeNetRequest (tạm thời), set `all_frames: false` |
+
+#### ⚡ Logic mới cho video navigation
+
+```javascript
+// Khi URL thay đổi trong YouTube SPA:
+isGoingToVideo = URL mới là /watch hoặc /shorts
+wasNotOnVideo = URL cũ KHÔNG phải video (trang chủ, kênh, search)
+isDifferentVideo = Video ID khác nhau
+
+// Reload khi:
+if (isGoingToVideo && (wasNotOnVideo || isDifferentVideo)) {
+    window.location.reload();
+}
+```
+
+**Các trường hợp sẽ auto-reload:**
+- ✅ Trang chủ → Video
+- ✅ Trang kênh → Video  
+- ✅ Trang search → Video
+- ✅ Video A → Video B (khác video)
+- ❌ Video → Video (cùng video) - không reload
+
+---
+
+### v1.0.1 - Initial Release
+
+- Storage Access API bypass
+- Performance optimizations (GPU acceleration, preconnect)
+- Ad/tracking blocking via declarativeNetRequest
+- Auto-retry on video errors
